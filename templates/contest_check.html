@@ -1,0 +1,158 @@
+{% csrf_token %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Проверка участия в канале</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Высота окна браузера */
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url(https://furman.top/uploads/posts/2022-06/1654038490_34-furman-top-p-fon-vatsap-standartnii-krasivie-36.png);
+            background-color: #f0f0f0; /* Цвет фона */
+        }
+
+        h1 {
+            font-size: 2em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+        }
+
+        .emoji {
+            font-size: 5em; /* Размер смайлика */
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 20vh; /* Высота окна браузера */
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="emoji">🎲</div>
+        <h1 style="font-family: 'Rubik';">Проверка...</h1>
+    </div>
+    <script>
+        // Получение Telegram ID пользователя
+        Telegram.WebApp.ready(); // Инициализация Telegram Web App
+        // const telegramUserId = Telegram.WebApp.initDataUnsafe.user.id; // Получаем ID пользователя
+        // const telegramUserName = Telegram.WebApp.initDataUnsafe.user.username; // Получаем Username пользователя
+        const telegramUserId = 6616327061;
+        const telegramUserName = 'Dan_4rt0x';
+
+        // const startappParam = Telegram.WebApp.initDataUnsafe.start_param;
+        const startappParam = '-1002390255063-123--1002384870119___2___b-random_contestBot_321_c-_999_L2H0VHtzG985OGMy';
+        const parts = startappParam.split('___');
+        const channelsString = parts[0];
+        let channels;
+        if (channelsString.includes('-123-')) {
+            channels = channelsString.split('-123-'); // Разделяем строку по запятой
+        } else {
+            channels = [channelsString]; // Преобразуем в массив с одним элементом
+        }
+
+        const nc = parts[1];
+        const ads = parts[2];
+
+        async function addUser(telegramUserId, telegramUserName) {
+            try {
+                const resp = await fetch('/add-user/?uid=' + telegramUserId + '&username=' + telegramUserName);
+                const data = await resp.json(); // Предполагается, что ответ в формате JSON
+                console.log(data);
+            } catch (error) {
+                console.error('Ошибка при добавлении пользователя:', error);
+            }
+        }
+
+        // Вызов функции
+        addUser(telegramUserId, telegramUserName);
+
+        // Функция для проверки участия пользователя в каналах
+        function checkUserParticipation() {
+            let isUserInChannels = false;
+            let requests = [];
+
+            for (let i = 0; i < channels.length; i++) {
+                const channel = channels[i];
+                
+                // Создаем запрос для каждого канала
+                requests.push(
+                    fetch(`/check-participation/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': csrftoken,
+                        },
+                        body: JSON.stringify({
+                            channel_id: channel, // Предполагается, что у канала есть уникальный ID
+                            user_id: telegramUserId, // ID пользователя
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.is_subscribed) { // Предполагается, что API возвращает поле is_subscribed
+                            isUserInChannels = true;
+                        } else {
+                            isUserInChannels = false;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Ошибка:', error);
+                    })
+                );
+            }
+
+            // Ждем завершения всех запросов
+            Promise.all(requests).then(() => {
+                // Редирект в зависимости от результата проверки
+                if (isUserInChannels) {
+                    // Если пользователь участвует, можно перенаправить на страницу канала
+                    window.location.href = "/success/?nc=" + nc + "&ads=" + ads + "&uid=" + telegramUserId; // Замените на ваш URL
+                } else {
+                    // Если пользователь не участвует, можно перенаправить на другую страницу
+                    window.location.href = "/failure/"; // Замените на ваш URL
+                }
+            });
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    // Проверяем, начинается ли cookie с имени нужного cookie
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+
+        // Вызов функции проверки участия
+        setTimeout(() => { checkUserParticipation(); }, 1500);
+        // checkUserParticipation();
+    </script>
+</body>
+</html>

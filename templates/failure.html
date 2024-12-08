@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Contest Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Высота окна браузера */
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: url(https://furman.top/uploads/posts/2022-06/1654038490_34-furman-top-p-fon-vatsap-standartnii-krasivie-36.png);
+            background-color: #f0f0f0; /* Цвет фона */
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+        }
+
+        .emoji {
+            font-size: 5em; /* Размер смайлика */
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 20vh; /* Высота окна браузера */
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="emoji">❌</div>
+        <h1 style="font-family: 'Rubik';">Вы не выполнили все условия!</h1>
+    </div>
+</body>
+</html>

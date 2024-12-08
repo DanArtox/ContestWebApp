@@ -1,0 +1,159 @@
+{% csrf_token %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Contest Bot</title>
+    <!-- <link rel="stylesheet" type="text/css" href="{% static 'css/success.css' %}"> -->
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Высота окна браузера */
+            margin: 0;
+            background: url(https://furman.top/uploads/posts/2022-06/1654038490_34-furman-top-p-fon-vatsap-standartnii-krasivie-36.png);
+            background-color: #f0f0f0; /* Цвет фона */
+        }
+
+        h1 {
+            font-family: 'Rubik';
+            font-size: 2em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+        }
+
+        h5 {
+            font-size: 1em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+            font-family: 'Rubik';
+            background-color: #99ff99;
+            box-shadow: 0 7px 10px rgba(0, 0, 0, 0.35);
+            padding: 7.5px;
+            border-radius: 12px;
+        }
+
+        h5:hover {
+            transform: translate3d(0px, 3px, 0px);
+        }
+
+        h6 {
+            font-size: 0.5em; /* Размер шрифта заголовка */
+            color: #095309; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+            background-color: #99ff99;
+            box-shadow: 0 7px 10px rgba(0, 0, 0, 0.35);
+        }
+
+        .emoji {
+            font-size: 5em; /* Размер смайлика */
+        }
+
+        .copyable-text {
+            display: block; /* Каждый элемент переходит на новую строку */
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 15px;
+            color: #007bff; /* Цвет текста ссылки */
+            text-decoration: none; /* Убирает подчеркивание */
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            z-index: 2;
+            text-align: center;
+            transition: all 0.5s;
+        }
+
+        .copyable-text2 {
+            font-family: 'Rubik';
+        }
+
+        .copyable-text2:hover {
+            background-color: #99ff99; /* Цвет фона при наведении */
+        }
+
+        .copyable-text3 {
+            font-family: 'Rubik';
+            background-color: #99ff99;
+        }
+        
+        .copyable-text3:hover {
+            background-color: #1c791c; /* Цвет фона при наведении */
+        }
+
+        .hidden {
+            display: none; /* Скрытие блока */
+        }
+
+        .overlay {
+            position: fixed; /* Фиксированное положение */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+            z-index: 1; /* размещение поверх других элементов */
+            display: none; /* Скрытие по умолчанию */
+        }
+
+        .popup {
+            position: absolute;
+            top: 50px; /* Отступ сверху */
+            left: 50%; /* Центрирование по горизонтали */
+            transform: translateX(-50%); /* Центрирование */
+            z-index: 1001; /* Чтоб был на переднем плане */
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 20vh; /* Высота окна браузера */
+            padding: 40px;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+        }
+
+        .additional {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 12vh; /* Высота окна браузера */
+            width: 25vh;
+            padding: 30px;
+            margin-top: 30px;
+            font-family: 'Rubik';
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="emoji">✅</div>
+        <h1>Вы участвуете!</h1>
+        <h5 id="increase-chances">Увеличить шансы на победу</h5>
+        <div class="overlay" id="overlay"></div>
+        <div class="copyable-text hidden" id="textToCopy2">
+            <div class="copyable-text copyable-text2" id="textToCopy">Реф. ссылка для друга</div>
+            {% for name, link in ads %}
+                <!-- <a href="{{ link }}" class="copyable-text copyable-text2" onclick="onBtnClick('{{ name }}');">{{ name }}</a> -->
+                <div class="copyable-text copyable-text2 tasks" data-link="{{ link }}">{{ name }}</div>
+            {% endfor %}
+            <a href="javascript:pageRefresh()" class="copyable-text copyable-text2 copyable-text3">Готово</a>
+        </div>
+    </div>
+    <div class="additional">
+        <p>В данный момент ваш шанс на победу равен <b>{{ uc }}%</b>, но если вы намерены увеличить свой шанс на победу то нажми на кнопку выше ☝️</p>
+    </div>
+</body>

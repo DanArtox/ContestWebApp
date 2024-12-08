@@ -1,0 +1,327 @@
+{% csrf_token %}
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Contest Bot</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            display: flex;
+            position: relative;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh; /* Высота окна браузера */
+            margin: 0;
+            background: url(https://i.imgur.com/Td4Hmr0.jpeg);
+            background-color: #f0f0f0; /* Цвет фона */
+        }
+
+        h1 {
+            font-family: 'Rubik';
+            font-size: 1.95em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 15px 0; /* Отступы вокруг заголовка */
+        }
+
+        h5 {
+            font-size: 0.95em; /* Размер шрифта заголовка */
+            color: #333; /* Цвет заголовка */
+            margin: 15px 0; /* Отступы вокруг заголовка */
+            font-family: 'Rubik';
+            background-color: #99ff99;
+            box-shadow: 0 7px 10px rgba(0, 0, 0, 0.35);
+            padding: 7.5px;
+            border-radius: 12px;
+        }
+
+        h5:hover {
+            transform: translate3d(0px, 3px, 0px);
+        }
+
+        h6 {
+            font-size: 0.5em; /* Размер шрифта заголовка */
+            color: #095309; /* Цвет заголовка */
+            margin: 10px 0; /* Отступы вокруг заголовка */
+            background-color: #99ff99;
+            box-shadow: 0 7px 10px rgba(0, 0, 0, 0.35);
+        }
+
+        .emoji {
+            font-size: 5em; /* Размер смайлика */
+        }
+
+        .copyable-text {
+            display: block; /* Каждый элемент переходит на новую строку */
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            padding: 15px;
+            color: #007bff; /* Цвет текста ссылки */
+            text-decoration: none; /* Убирает подчеркивание */
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 10px;
+            z-index: 2;
+            text-align: center;
+            transition: all 0.5s;
+        }
+
+        .copyable-text2 {
+            font-family: 'Rubik';
+        }
+
+        .copyable-text2:hover {
+            background-color: #99ff99; /* Цвет фона при наведении */
+        }
+
+        .copyable-text3 {
+            font-family: 'Rubik';
+            background-color: #99ff99;
+        }
+        
+        .copyable-text3:hover {
+            background-color: #1c791c; /* Цвет фона при наведении */
+        }
+
+        .tasks-text {
+            display: block; /* Каждый элемент переходит на новую строку */
+            color: #565c63; /* Цвет текста ссылки */
+            margin-bottom: 10px;
+            z-index: 2;
+            text-align: center;
+            transition: all 0.5s;
+            margin-top: 0;
+            font-family: 'Rubik';
+        }
+
+        .hidden {
+            display: none; /* Скрытие блока */
+        }
+
+        .overlay {
+            position: fixed; /* Фиксированное положение */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5); /* Полупрозрачный черный фон */
+            z-index: 2; /* размещение поверх других элементов */
+            display: none; /* Скрытие по умолчанию */
+        }
+
+        .popup {
+            position: absolute;
+            top: 50px; /* Отступ сверху */
+            left: 50%; /* Центрирование по горизонтали */
+            transform: translateX(-50%); /* Центрирование */
+            display: flex; /* Используем flex для центрирования содержимого */
+            justify-content: center; /* Центрируем по горизонтали */
+            align-items: center; /* Центрируем по вертикали */
+            z-index: 3; /* Чтоб был на переднем плане */
+        }
+
+        .main {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 30vh; /* Высота окна браузера */
+            padding: 6vh;
+            font-family: Arial, sans-serif;
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+            z-index: 1;
+        }
+
+        .additional {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 12vh; /* Высота окна браузера */
+            width: 33vh;
+            padding: 40px;
+            margin-top: 40px;
+            font-family: 'Rubik';
+            border-radius: 10px;
+            background-color: #f1e9e9;
+            box-shadow: 0 17px 20px rgba(0, 0, 0, 0.35);
+        }
+    </style>
+</head>
+<body>
+    <div class="main">
+        <div class="emoji">✅</div>
+        <h1>Вы участвуете!</h1>
+        <h5 id="increase-chances">Увеличить шансы на победу</h5>
+        <div class="overlay" id="overlay"></div>
+        <div class="copyable-text hidden" id="textToCopy2">
+            <div class="copyable-text copyable-text2" id="textToCopy">Реф. ссылка для друга</div>
+            <p class="tasks-text">+{{ rc }}%</p>
+            {% for name, link in ads %}
+                <!-- <a href="{{ link }}" class="copyable-text copyable-text2" onclick="onBtnClick('{{ name }}');">{{ name }}</a> -->
+                <!-- <div class="copyable-text copyable-text2 tasks" data-link="{{ link }}">{{ name }}</div> -->
+                <a href="{{ link }}" class="copyable-text copyable-text2">{{ name }}</a>
+                {% if name == "Запустить бота" %}
+                    <p class="tasks-text">+{{ bc }}% шанс на победу</p>
+                {% elif name == "Подписаться на канал" %}
+                    <p class="tasks-text">+{{ cc }}% шанс на победу</p>
+                {% endif %}
+            {% endfor %}
+            <a href="javascript:pageRefresh()" class="copyable-text copyable-text2 copyable-text3">Готово</a>
+        </div>
+    </div>
+    <div class="additional">
+        <p>В данный момент ваш шанс на победу равен <b>{{ uc }}%</b>, но если вы намерены увеличить свой шанс на победу то нажми на кнопку выше ☝️</p>
+    </div>
+    <script>
+        const items = document.querySelectorAll('.tasks');
+        Telegram.WebApp.ready();
+
+        function pageRefresh() {
+            setTimeout("location.reload(true);",1);
+        };
+
+        items.forEach(item => {
+            item.addEventListener('click', function() {
+                // Получаем значение name
+                const name = this.textContent;
+                // Получаем значение link из data-атрибута
+                const link = this.getAttribute('data-link');
+
+                const csrftoken = '{{ csrf_token }}';
+                let chance, alertMessage;
+
+                if (name == 'Запустить бота') {
+                    chance = '{{ bc }}';
+                    alertMessage = `Это задание увеличит ваш шанс на победу на ${chance}%`;
+                } else if (name == 'Подписаться на канал') {
+                    chance = '{{ cc }}';
+                    alertMessage = `Это задание увеличит ваш шанс на победу на ${chance}%`;
+                } else {
+                    return true;
+                }
+
+                const bodyContent = {
+                    user_id: '{{ uid }}',
+                    cid: '{{ nc }}',
+                    chance: chance,
+                    token: 'Web-ArtoxGroup',
+                    link: link
+                };
+
+                const api_url = 'https://evosland.ru/success/add-user-chance/';
+                // const api_url = 'http://127.0.0.1:8000/success/add-user-chance/';
+                async function onBtnClick() {
+                    try {
+                        const response = await fetch(api_url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': csrftoken,
+                            },
+                            body: JSON.stringify(bodyContent),
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok ' + response.statusText);
+                        }
+
+                        const data = await response.json(); // Если вы ожидаете JSON ответ
+                        alert(alertMessage); // Показываем алерта после успешного запроса
+                        
+                        const tg = window.Telegram.WebApp;
+
+                        // Задержка перед перенаправлением
+                        setTimeout(() => {
+                            window.location.href = link; // Перенаправляем пользователя на другую страницу
+                        }, 1500); // 3000 миллисекунд = 3 секунды
+
+                        // setTimeout(() => {
+                        //     tg.openLink(link); // Перенаправляем пользователя на другую страницу
+                        // }, 1500); // 3000 миллисекунд = 3 секунды
+
+                    } catch (error) {
+                        alert(error)
+                    }
+                }
+
+                onBtnClick()
+            });
+        });
+        // async function onBtnClick(name) {
+        //     const csrftoken = '{{ csrf_token }}';
+        //     let chance, alertMessage;
+
+        //     if (name == 'Запустить бота') {
+        //         chance = '{{ bc }}';
+        //         alertMessage = `Это задание увеличит ваш шанс на победу на ${chance}%`;
+        //     } else if (name == 'Подписаться на канал') {
+        //         chance = '{{ cc }}';
+        //         alertMessage = `Это задание увеличит ваш шанс на победу на ${chance}%`;
+        //     } else {
+        //         return true;
+        //     }
+
+        //     const bodyContent = {
+        //         user_id: '{{ uid }}',
+        //         cid: '{{ nc }}',
+        //         chance: chance,
+        //         token: 'Web-ArtoxGroup'
+        //     };
+
+        //     const api_url = '/add-user-chance/';
+        //     // const api_url = 'https://evosland.ru/add-user-chance/';
+
+        //     try {
+        //         const response = await fetch(`https://evosland.ru/add-user-chance/`, {
+        //             method: 'POST',
+        //             headers: {
+        //                 'Content-Type': 'application/json',
+        //                 'X-CSRFToken': csrftoken,
+        //             },
+        //             body: JSON.stringify(bodyContent),
+        //         });
+
+        //         if (!response.ok) {
+        //             throw new Error('Network response was not ok ' + response.statusText);
+        //         }
+
+        //         const data = await response.json(); // Если вы ожидаете JSON ответ
+        //         alert(alertMessage); // Показываем алерта после успешного запроса
+
+        //     } catch (error) {
+        //         console.error('There was a problem with your fetch operation:', error);
+        //     }
+            
+        //     return true;
+        // }
+
+        document.getElementById('increase-chances').onclick = function() {
+            document.getElementById('textToCopy2').classList.toggle('hidden');
+            document.getElementById('overlay').style.display = document.getElementById('textToCopy2').classList.contains('hidden') ? 'none' : 'block';
+        };
+
+        document.getElementById('overlay').onclick = function() {
+            document.getElementById('textToCopy2').classList.add('hidden');
+            this.style.display = 'none';
+        };
+
+        document.getElementById('textToCopy').addEventListener('click', function() {
+            const text = "https://t.me/random_contestBot?start=reg-{{ nc }}-{{ uid }}"; // Получаем текст
+            navigator.clipboard.writeText(text) // Копируем текст в буфер обмена
+                .then(() => {
+                    alert('Ссылка скопирована! С каждым приведённым другом шанс на победу растёт на {{ rc }}%'); // Уведомление об успешном копировании
+                })
+                .catch(err => {
+                    console.error('Ошибка при копировании текста: ', err); // Обработка ошибки
+                });
+        });
+    </script>
+</body>
+</html>
